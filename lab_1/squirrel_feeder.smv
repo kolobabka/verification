@@ -1,0 +1,72 @@
+MODULE main
+DEFINE
+  MAX_FOOD := 3;
+  MAX_SQUIRREL_ABSENCE := 128;
+
+VAR
+  squirrel_present : boolean;
+  food_count       : 0..MAX_FOOD;
+  food_available   : boolean;
+  feeder_full      : boolean;
+  feed_motor       : {on, off};
+  signal_light     : boolean;
+  controller_state : {idle, dispense, wait_empty};
+  refill_timer     : 0..5;
+  squirrel_timer   : 0..MAX_SQUIRREL_ABSENCE;
+
+ASSIGN
+  next(squirrel_timer) := case
+    squirrel_present : 0;
+    squirrel_timer = MAX_SQUIRREL_ABSENCE : MAX_SQUIRREL_ABSENCE;
+    TRUE : squirrel_timer + 1;
+  esac;
+
+  init(squirrel_present) := FALSE;
+  next(squirrel_present) := case
+    squirrel_timer = MAX_SQUIRREL_ABSENCE : TRUE;
+    TRUE : {TRUE, FALSE};
+  esac;
+
+  init(food_count) := MAX_FOOD;
+  next(food_count) := case
+    feed_motor = on : max(food_count - 1, 0);
+    refill_timer = 5 : MAX_FOOD;
+    TRUE : food_count;
+  esac;
+
+  init(food_available) := TRUE;
+  next(food_available) := (next(food_count) > 0);
+
+  init(feeder_full) := FALSE;
+  next(feeder_full) := case
+    controller_state = dispense : TRUE;
+    !squirrel_present : FALSE;
+    TRUE : feeder_full;
+  esac;
+
+  init(feed_motor) := off;
+  next(feed_motor) := case
+    controller_state = dispense : on;
+    TRUE : off;
+  esac;
+
+  init(signal_light) := FALSE;
+  next(signal_light) := case
+    !food_available : TRUE;
+    TRUE : FALSE;
+  esac;
+
+  init(refill_timer) := 0;
+  next(refill_timer) := case
+    food_available : 0;
+    refill_timer < 5 : refill_timer + 1;
+    TRUE : 0;
+  esac;
+
+  init(controller_state) := idle;
+  next(controller_state) := case
+    controller_state = idle & squirrel_present & food_available : dispense;
+    controller_state = dispense : wait_empty;
+    controller_state = wait_empty : idle;
+    TRUE : controller_state;
+  esac;
