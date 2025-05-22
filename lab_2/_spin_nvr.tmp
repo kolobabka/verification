@@ -1,0 +1,66 @@
+never p0 {    /* !([] (<> (squirrel_present))) */
+T0_init:
+	do
+	:: (! ((squirrel_present))) -> goto accept_S4
+	:: (1) -> goto T0_init
+	od;
+accept_S4:
+	do
+	:: (! ((squirrel_present))) -> goto accept_S4
+	od;
+}
+never p1 {    /* !([] ((! (squirrel_present)) || (<> ((controller_state==dispense))))) */
+T0_init:
+	do
+	:: (! ((! (squirrel_present))) && ! (((controller_state==dispense)))) -> goto accept_S4
+	:: (1) -> goto T0_init
+	od;
+accept_S4:
+	do
+	:: (! (((controller_state==dispense)))) -> goto accept_S4
+	od;
+}
+never p2 {    /* !([] ((! (! (food_available))) || (<> (food_available)))) */
+T0_init:
+	do
+	:: (! ((! (! (food_available)))) && ! ((food_available))) -> goto accept_S4
+	:: (1) -> goto T0_init
+	od;
+accept_S4:
+	do
+	:: (! ((food_available))) -> goto accept_S4
+	od;
+}
+never p3 {    /* !([] ((! ((squirrel_present) && ((food_count==0)))) || ((! ((controller_state==dispense))) U ((food_count==3))))) */
+T0_init:
+	do
+	:: (! ((! ((squirrel_present) && ((food_count==0))))) && ! (((food_count==3)))) -> goto accept_S4
+	:: atomic { (! ((! ((controller_state==dispense)))) && ! ((! ((squirrel_present) && ((food_count==0))))) && ! (((food_count==3)))) -> assert(!(! ((! ((controller_state==dispense)))) && ! ((! ((squirrel_present) && ((food_count==0))))) && ! (((food_count==3))))) }
+	:: (1) -> goto T0_init
+	od;
+accept_S4:
+	do
+	:: (! (((food_count==3)))) -> goto accept_S4
+	:: atomic { (! ((! ((controller_state==dispense)))) && ! (((food_count==3)))) -> assert(!(! ((! ((controller_state==dispense)))) && ! (((food_count==3))))) }
+	od;
+accept_all:
+	skip
+}
+never p4 {    /* !([] (! (timeout))) */
+T0_init:
+	do
+	:: atomic { (! ((! (timeout)))) -> assert(!(! ((! (timeout))))) }
+	:: (1) -> goto T0_init
+	od;
+accept_all:
+	skip
+}
+never p5 {    /* !([] (! (food_available))) */
+T0_init:
+	do
+	:: atomic { (! ((! (food_available)))) -> assert(!(! ((! (food_available))))) }
+	:: (1) -> goto T0_init
+	od;
+accept_all:
+	skip
+}

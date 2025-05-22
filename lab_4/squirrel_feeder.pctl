@@ -1,0 +1,4 @@
+P>=1 [ (!was_fed=1) | (F signal_light=1) ]
+P>=1 [ (sensed_present != 1) | (F (state=1 | state=2))]
+P<=1 [ F (squirrel_present=1) ]
+
